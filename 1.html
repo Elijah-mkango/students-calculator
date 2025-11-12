@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LIONS Smath</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --btn: #1f2937;
+      --btn-hover: #374151;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      display: grid; place-items: center; min-height: 100vh; padding: 20px;
+    }
+    .calc {
+      width: 360px; max-width: 100%; background: var(--panel);
+      border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); overflow: hidden;
+    }
+    .header {
+      padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #222;
+    }
+    .brand { font-weight: 600; letter-spacing: .2px; }
+    .mode {
+      display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted);
+    }
+    .toggle {
+      background: var(--btn); border: 1px solid #2b3440; color: var(--text);
+      border-radius: 20px; display: inline-flex; overflow: hidden;
+    }
+    .toggle button {
+      padding: 6px 10px; border: none; background: transparent; color: inherit; cursor: pointer;
+    }
+    .toggle button.active { background: var(--accent); color: #09220f; }
+    .display {
+      padding: 14px 16px; background: #0b1220; border-bottom: 1px solid #222;
+      display: grid; gap: 6px;
+    }
+    .expr {
+      font-size: 14px; color: var(--muted); min-height: 18px; word-wrap: break-word;
+    }
+    .result {
+      font-size: 26px; font-weight: 600; min-height: 32px; word-wrap: break-word;
+    }
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px; padding: 12px;
+    }
+    button.key {
+      background: var(--btn); border: 1px solid #2b3440; color: var(--text);
+      padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px;
+    }
+    button.key:hover { background: var(--btn-hover); }
+    button.op { color: #93c5fd; }
+    button.fn { color: #a7f3d0; }
+    button.equal { background: var(--accent); color: #07210f; border-color: transparent; font-weight: 700; }
+    button.clear { color: var(--danger); }
+    .footer {
+      padding: 10px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid #222;
+    }
+    .workspace {
+      padding: 12px;
+      border-top: 1px solid #222;
+      background: #0b1220;
+    }
+    .workspace label {
+      display: block;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .workspace textarea {
+      width: 100%;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid #2b3440;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      resize: vertical;
+    }
+    @media (max-width: 420px) { .keys { grid-template-columns: repeat(5, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="calc">
+    <div class="header">
+      <div class="brand">LIONSMADE Secondary scientific calculatir</div>
+      <div class="mode">
+        Angle:
+        <div class="toggle" id="angleToggle">
+          <button data-mode="DEG" class="active">DEG</button>
+          <button data-mode="RAD">RAD</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="display">
+      <div class="expr" id="expr"></div>
+      <div class="result" id="result">0</div>
+    </div>
+
+    <div class="keys" id="keys">
+      <!-- Memory / edit -->
+      <button class="key fn" data-k="MC">MC</button>
+      <button class="key fn" data-k="MR">MR</button>
+      <button class="key fn" data-k="M+">M+</button>
+      <button class="key fn" data-k="M-">M-</button>
+      <button class="key fn" data-k="ANS">Ans</button>
+      <button class="key clear" data-k="AC">AC</button>
+
+      <!-- Parentheses & factorial -->
+      <button class="key fn" data-k="(">(</button>
+      <button class="key fn" data-k=")">)</button>
+      <button class="key fn" data-k="!">n!</button>
+      <button class="key fn" data-k="√">√</button>
+      <button class="key fn" data-k="^">x^y</button>
+      <button class="key op" data-k="÷">÷</button>
+
+      <!-- Trig & inverse -->
+      <button class="key fn" data-k="sin">sin</button>
+      <button class="key fn" data-k="cos">cos</button>
+      <button class="key fn" data-k="tan">tan</button>
+      <button class="key fn" data-k="asin">sin⁻¹</button>
+      <button class="key fn" data-k="acos">cos⁻¹</button>
+      <button class="key fn" data-k="atan">tan⁻¹</button>
+
+      <!-- Logs & constants -->
+      <button class="key fn" data-k="log">log</button>
+      <button class="key fn" data-k="ln">ln</button>
+      <button class="key fn" data-k="π">π</button>
+      <button class="key fn" data-k="e">e</button>
+      <button class="key fn" data-k="x²">x²</button>
+      <button class="key op" data-k="×">×</button>
+
+      <!-- Numbers row -->
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key fn" data-k="±">±</button>
+      <button class="key fn" data-k="%">%</button>
+      <button class="key op" data-k="-">−</button>
+
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key fn" data-k="x^-1">x⁻¹</button>
+      <button class="key fn" data-k="EXP">EXP</button>
+      <button class="key op" data-k="+">+</button>
+
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key fn" data-k="DEL">DEL</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key" data-k=".">.</button>
+
+      <!-- Evaluate -->
+      <button class="key equal" data-k="=">=</button>
+    </div>
+
+    <div class="footer">Tip: Toggle DEG/RAD before using trig keys.</div>
+
+    <!-- Student Workspace -->
+    <div class="workspace">
+      <label for="studentWork">Student Working Space:</label>
+      <textarea id="studentWork" placeholder="Write your solution here..." rows="6"></textarea>
+    </div>
+  </div>
+
+ <script>
+  const exprEl = document.getElementById('expr');
+  const resultEl = document.getElementById('result');
+  const keysEl = document.getElementById('keys');
+  const angleToggle = document.getElementById('angleToggle');
+  let angleMode = 'DEG';
+  let memory = 0;
+  let lastAns = 0;
+
+  angleToggle.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    angleMode = e.target.dataset.mode;
+    [...angleToggle.children].forEach(b => b.classList.toggle('active', b.dataset.mode === angleMode));
+    preview();
+  });
+
+  // Helper math
+  const toRad = x => angleMode === 'DEG' ? (x * Math.PI / 180) : x;
+  const fromRad = x => angleMode === 'DEG' ? (x * 180 / Math.PI) : x;
+
+  function factorial(n) {
+    if (!Number.isInteger(n) || n < 0) return NaN;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  function safeEval(input) {
+    let s = input
+      .replace(/π/g, 'Math.PI')
+      .replace(/e(?![a-zA-Z])/g, 'Math.E')
+      .replace(/÷/g, '/')
+      .replace(/×/g, '*')
+      .replace(/−/g, '-')
+      .replace(/√\s*\(/g, 'Math.sqrt(')
+      .replace(/√\s*([0-9.]+)/g, 'Math.sqrt($1)')
+      .replace(/x²/g, '**2')
+      .replace(/x\^-1/g, '**-1')
+      .replace(/\^/g, '**')
+      .replace(/log\(/g, 'Math.log10(')
+      .replace(/ln\(/g, 'Math.log(')
+      .replace(/%/g, '/100')
+      .replace(/ANS/g, String(lastAns))
+      .replace(/MR/g, String(memory));
+
+    // Trig/inverse with DEG/RAD handling
+    s = s
+      .replace(/sin\(/g, 'SIN(')
+      .replace(/cos\(/g, 'COS(')
+      .replace(/tan\(/g, 'TAN(')
+      .replace(/asin\(/g, 'ASIN(')
+      .replace(/acos\(/g, 'ACOS(')
+      .replace(/atan\(/g, 'ATAN(');
+
+    const SIN = x => Math.sin(toRad(x));
+    const COS = x => Math.cos(toRad(x));
+    const TAN = x => Math.tan(toRad(x));
+    const ASIN = x => fromRad(Math.asin(x));
+    const ACOS = x => fromRad(Math.acos(x));
+    const ATAN = x => fromRad(Math.atan(x));
+
+    // Factorial
+    s = s.replace(/([0-9]+)!/g, 'FACT($1)');
+    const ENV = {Math, SIN, COS, TAN, ASIN, ACOS, ATAN, FACT: factorial};
+
+    // EXP key
+    s = s.replace(/EXP/g, '*10**');
+
+    try {
+      const val = Function('ENV', `with (ENV) { return (${s}); }`)(ENV);
+      return val;
+    } catch {
+      return NaN;
+    }
+  }
+
+  function preview() {
+    const val = safeEval(exprEl.textContent || '0');
+    resultEl.textContent = Number.isFinite(val) ? String(val) : 'Error';
+  }
+
+  function append(token) {
+    const t = exprEl.textContent;
+    if (token === 'AC') { exprEl.textContent = ''; resultEl.textContent = '0'; return; }
+    if (token === 'DEL') { exprEl.textContent = t.slice(0, -1); preview(); return; }
+    if (token === '=') {
+      const v = safeEval(t || '0');
+      if (Number.isFinite(v)) { resultEl.textContent = String(v); lastAns = v; }
+      else { resultEl.textContent = 'Error'; }
+      return;
+    }
+    if (token === '±') {
+      if (!t || /[+\-*/(]$/.test(t)) exprEl.textContent += '-';
+      else exprEl.textContent = `-(${t})`;
+      preview(); return;
+    }
+    if (token === '√') { exprEl.textContent += '√('; preview(); return; }
+    if (token === 'x²') { exprEl.textContent += 'x²'; preview(); return; }
+    if (token === 'x^-1') { exprEl.textContent += 'x^-1'; preview(); return; }
+    if (token === 'EXP') { exprEl.textContent += 'EXP'; preview(); return; }
+    if (token === 'ANS') { exprEl.textContent += 'ANS'; preview(); return; }
+
+    // Memory keys
+    if (token === 'MC') { memory = 0; return; }
+    if (token === 'MR') { exprEl.textContent += 'MR'; preview(); return; }
+    if (token === 'M+') {
+      const v = safeEval(exprEl.textContent || '0');
+      if (Number.isFinite(v)) memory += v;
+      return;
+    }
+    if (token === 'M-') {
+      const v = safeEval(exprEl.textContent || '0');
+      if (Number.isFinite(v)) memory -= v;
+      return;
+    }
+
+    if (token === '!') { exprEl.textContent += '!'; preview(); return; }
+
+    const map = { '+': '+', '-': '−', '×': '×', '÷': '÷' };
+    if (token in map) { exprEl.textContent += map[token]; preview(); return; }
+
+    const funcs = new Set(['sin','cos','tan','asin','acos','atan','log','ln']);
+    if (funcs.has(token)) { exprEl.textContent += `${token}(`; preview(); return; }
+
+    if (['π','e','(',')','%','.'].includes(token)) { exprEl.textContent += token; preview(); return; }
+
+    if (/^[0-9]$/.test(token) || token === '^') { exprEl.textContent += token; preview(); return; }
+
+    exprEl.textContent += token;
+    preview();
+  }
+
+  keysEl.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    append(e.target.dataset.k);
+  });
+
+  preview();
+</script>
+</body>
+</html>
